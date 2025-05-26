@@ -5,9 +5,10 @@ interface SidebarProps {
   isOpen: boolean;
   setCurrentPage: (page: string) => void;
   currentPage: string;
+  toggleSidebar: () => void;  // Add this
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setCurrentPage, currentPage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setCurrentPage, currentPage, toggleSidebar }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { id: 'expenses', label: 'Expenses', icon: <Receipt size={20} /> },
@@ -20,10 +21,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setCurrentPage, currentPage }
   return (
     <>
       {/* Desktop sidebar */}
-      <aside 
-        className={`fixed top-0 left-0 z-20 h-full w-64 bg-gray-800 text-white pt-16 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+      <aside
+        className={`fixed top-0 left-0 z-20 h-full w-64 bg-gray-800 text-white pt-16 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="px-4 py-6">
           <nav>
@@ -32,11 +32,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setCurrentPage, currentPage }
                 <li key={item.id}>
                   <button
                     onClick={() => setCurrentPage(item.id)}
-                    className={`w-full flex items-center px-4 py-3 text-sm rounded-md transition-colors ${
-                      currentPage === item.id
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-700'
-                    }`}
+                    className={`w-full flex items-center px-4 py-3 text-sm rounded-md transition-colors ${currentPage === item.id
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700'
+                      }`}
                   >
                     <span className="mr-3">{item.icon}</span>
                     {item.label}
@@ -55,11 +54,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setCurrentPage, currentPage }
             <button
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
-              className={`flex flex-col items-center py-2 px-3 ${
-                currentPage === item.id
-                  ? 'text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`flex flex-col items-center py-2 px-3 ${currentPage === item.id
+                ? 'text-blue-600'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               {item.icon}
               <span className="text-xs mt-1">{item.label}</span>
@@ -70,9 +68,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setCurrentPage, currentPage }
 
       {/* Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
-          onClick={() => isOpen = false}
+          onClick={toggleSidebar}
         ></div>
       )}
     </>
