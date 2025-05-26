@@ -1,18 +1,23 @@
 import { Expense } from '../types';
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount: number, currency: string = 'INR'): string => {
+  const options = {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 2,
-  }).format(amount);
+  };
+
+  if (currency === 'INR') {
+    return new Intl.NumberFormat('en-IN', options).format(amount);
+  }
+  return new Intl.NumberFormat('en-US', options).format(amount);
 };
 
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
     month: 'short',
-    day: 'numeric',
     year: 'numeric',
   }).format(date);
 };

@@ -13,24 +13,24 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ onEdit }) => {
   const { expenses, deleteExpense, categories } = useExpenses();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  
+
   // Filter expenses based on search term and selected category
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory ? expense.category === selectedCategory : true;
     return matchesSearch && matchesCategory;
   });
-  
+
   // Sort expenses by date (newest first)
   const sortedExpenses = [...filteredExpenses].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
-  
+
   const getCategoryColor = (categoryName: string) => {
     const category = categories.find(cat => cat.name === categoryName);
     return category ? category.color : '#6B7280'; // Default gray
   };
-  
+
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row gap-4">
@@ -63,14 +63,14 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ onEdit }) => {
           </select>
         </div>
       </div>
-      
+
       {sortedExpenses.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <p className="text-gray-500">No expenses found</p>
           {(searchTerm || selectedCategory) && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="mt-2"
               onClick={() => {
                 setSearchTerm('');
@@ -82,7 +82,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ onEdit }) => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -114,8 +114,8 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ onEdit }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center">
-                      <div 
-                        className="w-2 h-2 rounded-full mr-2" 
+                      <div
+                        className="w-2 h-2 rounded-full mr-2"
                         style={{ backgroundColor: getCategoryColor(expense.category) }}
                       ></div>
                       {expense.category}

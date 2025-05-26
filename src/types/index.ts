@@ -17,6 +17,8 @@ export interface Budget {
   id: string;
   category: string;
   amount: number;
+  period?: 'weekly' | 'monthly' | 'yearly';
+  alertThreshold?: number;
 }
 
 export interface Balance {
