@@ -62,120 +62,60 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [currency, setCurrency] = useState('INR');
   const [dataLoaded, setDataLoaded] = useState(false);
 
+  // Initialize Firebase listeners
   useEffect(() => {
-    formatCurrency(0, currency);
-  }, [currency]);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        const db = getDatabase();
-        const userId = user.uid;
-
-        const expensesRef = ref(db, `users/${userId}/expenses`);
-        const categoriesRef = ref(db, `users/${userId}/categories`);
-        const budgetsRef = ref(db, `users/${userId}/budgets`);
-        const balanceRef = ref(db, `users/${userId}/balance`);
-        const currencyRef = ref(db, `users/${userId}/currency`);
-
-        const unsubscribeFns: (() => void)[] = [];
-
-        onValue(expensesRef, (snapshot) => {
-          const data = snapshot.val();
-          setExpenses(data ? Object.values(data) : []);
+    const user = auth.currentUser;
+    if (!user) {
+      // Load from localStorage if not authenticated
+      const storedBalance = localStorage.getItem('balance');
+      if (storedBalance) {
+        const parsedBalance = JSON.parse(storedBalance);
+        setBalance({
+          total: parsedBalance.total || 0,
+          transactions: Array.isArray(parsedBalance.transactions) ? parsedBalance.transactions : [],
         });
-
-        onValue(categoriesRef, (snapshot) => {
-          const data = snapshot.val();
-          setCategories(data ? Object.values(data) : initialCategories);
-        });
-
-        onValue(budgetsRef, (snapshot) => {
-          const data = snapshot.val();
-          setBudgets(data ? Object.values(data) : []);
-        });
-
-        onValue(balanceRef, (snapshot) => {
-          const data = snapshot.val();
-          setBalance(
-            data
-              ? {
-                total: data.total ?? 0,
-                transactions: Array.isArray(data.transactions)
-                  ? data.transactions
-                  : [],
-              }
-              : initialBalance
-          );
-        });
-
-        onValue(currencyRef, (snapshot) => {
-          const data = snapshot.val();
-          setCurrency(data || 'INR');
-        });
-
-        // Delay to allow data to load before saving anything
-        const timeoutId = setTimeout(() => setDataLoaded(true), 1000);
-
-        return () => {
-          clearTimeout(timeoutId);
-          off(expensesRef);
-          off(categoriesRef);
-          off(budgetsRef);
-          off(balanceRef);
-          off(currencyRef);
-        };
-      } else {
-        const storedExpenses = localStorage.getItem('expenses');
-        const storedCategories = localStorage.getItem('categories');
-        const storedBudgets = localStorage.getItem('budgets');
-        const storedBalance = localStorage.getItem('balance');
-        const storedCurrency = localStorage.getItem('currency');
-
-        if (storedExpenses) setExpenses(JSON.parse(storedExpenses));
-        if (storedCategories) setCategories(JSON.parse(storedCategories));
-        if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
-        if (storedBalance) {
-          const parsed = JSON.parse(storedBalance);
-          setBalance({
-            total: parsed.total ?? 0,
-            transactions: Array.isArray(parsed.transactions)
-              ? parsed.transactions
-              : [],
-          });
-        }
-        if (storedCurrency) setCurrency(storedCurrency);
-
-        setDataLoaded(true);
       }
+      setDataLoaded(true);
+      return;
+    }
+
+    const db = getDatabase();
+    const balanceRef = ref(db, `users/${user.uid}/balance`);
+
+    const unsubscribe = onValue(balanceRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setBalance({
+          total: data.total || 0,
+          transactions: Array.isArray(data.transactions) ? data.transactions : [],
+        });
+      }
+      setDataLoaded(true);
     });
 
-    return unsubscribe;
+    return () => {
+      off(balanceRef);
+    };
   }, []);
 
+  // Save balance changes
   useEffect(() => {
     if (!dataLoaded) return;
 
     const user = auth.currentUser;
     if (user) {
       const db = getDatabase();
-      set(ref(db, `users/${user.uid}/expenses`), expenses);
-      set(ref(db, `users/${user.uid}/categories`), categories);
-      set(ref(db, `users/${user.uid}/budgets`), budgets);
       set(ref(db, `users/${user.uid}/balance`), balance);
-      set(ref(db, `users/${user.uid}/currency`), currency);
     } else {
-      localStorage.setItem('expenses', JSON.stringify(expenses));
-      localStorage.setItem('categories', JSON.stringify(categories));
-      localStorage.setItem('budgets', JSON.stringify(budgets));
       localStorage.setItem('balance', JSON.stringify(balance));
-      localStorage.setItem('currency', currency);
     }
-  }, [expenses, categories, budgets, balance, currency, dataLoaded]);
+  }, [balance, dataLoaded]);
 
   const addExpense = (expense: Omit<Expense, 'id'>) => {
     const newExpense = { ...expense, id: generateId() };
-    setExpenses([...expenses, newExpense]);
+    setExpenses((prev) => [...prev, newExpense]);
+
+    // Update balance
     setBalance((prev) => ({
       total: prev.total - expense.amount,
       transactions: [
@@ -186,7 +126,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
           date: expense.date,
           description: expense.description,
         },
-        ...(prev.transactions ?? []),
+        ...prev.transactions,
       ],
     }));
   };
@@ -200,8 +140,8 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
         total: prev.total + difference,
       }));
     }
-    setExpenses(
-      expenses.map((expense) =>
+    setExpenses((prev) =>
+      prev.map((expense) =>
         expense.id === updatedExpense.id ? updatedExpense : expense
       )
     );
@@ -215,129 +155,73 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
         total: prev.total + expense.amount,
       }));
     }
-    setExpenses(expenses.filter((expense) => expense.id !== id));
+    setExpenses((prev) => prev.filter((expense) => expense.id !== id));
   };
 
   const addBalance = (amount: number, description: string) => {
+    const newTransaction: Transaction = {
+      id: generateId(),
+      type: 'credit',
+      amount,
+      date: new Date().toISOString(),
+      description,
+    };
+
     setBalance((prev) => ({
       total: prev.total + amount,
-      transactions: [
-        {
-          id: generateId(),
-          type: 'credit',
-          amount,
-          date: new Date().toISOString(),
-          description,
-        },
-        ...(prev.transactions ?? []),
-      ],
+      transactions: [newTransaction, ...prev.transactions],
     }));
   };
 
   const addCategory = (category: Omit<Category, 'id'>) => {
     const newCategory = { ...category, id: generateId() };
-    setCategories([...categories, newCategory]);
+    setCategories((prev) => [...prev, newCategory]);
   };
 
   const updateCategory = (updatedCategory: Category) => {
-    setCategories(
-      categories.map((category) =>
+    setCategories((prev) =>
+      prev.map((category) =>
         category.id === updatedCategory.id ? updatedCategory : category
       )
     );
   };
 
   const deleteCategory = (id: string) => {
-    setBudgets(budgets.filter((budget) => budget.category !== id));
-    setCategories(categories.filter((category) => category.id !== id));
+    setCategories((prev) => prev.filter((category) => category.id !== id));
   };
 
-  const addBudget = async (budget: Omit<Budget, 'id'>) => {
+  const addBudget = (budget: Omit<Budget, 'id'>) => {
     const newBudget = { ...budget, id: generateId() };
-    setBudgets([...budgets, newBudget]);
-    const user = auth.currentUser;
-    if (user) {
-      try {
-        const db = getDatabase();
-        await set(ref(db, `users/${user.uid}/budgets/${newBudget.id}`), newBudget);
-      } catch (error) {
-        console.error('Failed to save budget to Firebase:', error);
-        localStorage.setItem('budgets', JSON.stringify([...budgets, newBudget]));
-      }
-    }
+    setBudgets((prev) => [...prev, newBudget]);
   };
 
-  const updateBudget = async (updatedBudget: Budget) => {
-    setBudgets(
-      budgets.map((budget) =>
+  const updateBudget = (updatedBudget: Budget) => {
+    setBudgets((prev) =>
+      prev.map((budget) =>
         budget.id === updatedBudget.id ? updatedBudget : budget
       )
     );
-    const user = auth.currentUser;
-    if (user) {
-      try {
+  };
+
+  const deleteBudget = (id: string) => {
+    setBudgets((prev) => prev.filter((budget) => budget.id !== id));
+  };
+
+  const resetAllData = () => {
+    if (window.confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+      setExpenses(initialExpenses);
+      setCategories(initialCategories);
+      setBudgets(initialBudgets);
+      setBalance(initialBalance);
+      setCurrency('INR');
+
+      const user = auth.currentUser;
+      if (user) {
         const db = getDatabase();
-        await set(ref(db, `users/${user.uid}/budgets/${updatedBudget.id}`), updatedBudget);
-      } catch (error) {
-        console.error('Failed to update budget in Firebase:', error);
+        set(ref(db, `users/${user.uid}`), null);
       }
-    }
-  };
 
-  const deleteBudget = async (id: string) => {
-    setBudgets(budgets.filter((budget) => budget.id !== id));
-    const user = auth.currentUser;
-    if (user) {
-      try {
-        const db = getDatabase();
-        await set(ref(db, `users/${user.uid}/budgets/${id}`), null);
-      } catch (error) {
-        console.error('Failed to delete budget from Firebase:', error);
-      }
-    }
-  };
-
-  const updateCurrency = (newCurrency: string) => {
-    setCurrency(newCurrency);
-    formatCurrency(0, newCurrency);
-  };
-
-  const resetAllData = async () => {
-    if (
-      window.confirm(
-        'Are you sure you want to reset ALL data? This cannot be undone.'
-      )
-    ) {
-      try {
-        const user = auth.currentUser;
-        setExpenses(initialExpenses);
-        setCategories(initialCategories);
-        setBudgets(initialBudgets);
-        setBalance(initialBalance);
-        setCurrency('INR');
-
-        if (user) {
-          const db = getDatabase();
-          await Promise.all([
-            set(ref(db, `users/${user.uid}/expenses`), null),
-            set(ref(db, `users/${user.uid}/categories`), null),
-            set(ref(db, `users/${user.uid}/budgets`), null),
-            set(ref(db, `users/${user.uid}/balance`), null),
-            set(ref(db, `users/${user.uid}/currency`), null),
-          ]);
-        }
-
-        localStorage.removeItem('expenses');
-        localStorage.removeItem('categories');
-        localStorage.removeItem('budgets');
-        localStorage.removeItem('balance');
-        localStorage.removeItem('currency');
-
-        alert('All data has been successfully reset.');
-      } catch (error) {
-        console.error('Failed to reset data:', error);
-        alert('Failed to reset data. Please try again.');
-      }
+      localStorage.clear();
     }
   };
 
@@ -359,7 +243,7 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
         updateBudget,
         deleteBudget,
         addBalance,
-        setCurrency: updateCurrency,
+        setCurrency,
         resetAllData,
       }}
     >
