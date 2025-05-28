@@ -1,55 +1,80 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, googleProvider } from '../utils/firebase';
-import { signInWithPopup, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { auth, googleProvider } from './firebase';
+import { signInWithRedirect, getRedirectResult, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { Navigate } from 'react-router-dom';
 
 interface AuthContextType {
-     user: User | null;
-     loading: boolean;
-     signInWithGoogle: () => Promise<void>;
-     signOut: () => Promise<void>;
+  user: User | null;
+  loading: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-     const [user, setUser] = useState<User | null>(null);
-     const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-     useEffect(() => {
-          const unsubscribe = auth.onAuthStateChanged((user) => {
-               setUser(user);
-               setLoading(false);
-          });
-          return unsubscribe;
-     }, []);
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+    });
 
-     const signInWithGoogle = async () => {
-          try {
-               await signInWithPopup(auth, googleProvider);
-          } catch (error) {
-               console.error("Google sign-in error:", error);
-          }
-     };
+    // Check for redirect result
+    getRedirectResult(auth).catch((error) => {
+      console.error("Redirect result error:", error);
+    });
 
-     const signOut = async () => {
-          try {
-               await firebaseSignOut(auth);
-          } catch (error) {
-               console.error("Sign out error:", error);
-          }
-     };
+    return unsubscribe;
+  }, []);
 
-     return (
-          <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
-               {children}
-          </AuthContext.Provider>
-     );
+  const signInWithGoogle = async () => {
+    try {
+      await signInWithRedirect(auth, googleProvider);
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export const useAuth = () => {
-     const context = useContext(AuthContext);
-     if (context === undefined) {
-          throw new Error('useAuth must be used within an AuthProvider');
-     }
-     return context;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

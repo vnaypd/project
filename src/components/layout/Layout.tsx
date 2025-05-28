@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Dashboard from '../dashboard/Dashboard';
@@ -10,29 +11,9 @@ import SettingsPage from '../settings/SettingsPage';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('dashboard');
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
-  };
-
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'expenses':
-        return <ExpensesPage />;
-      case 'categories':
-        return <CategoriesPage />;
-      case 'budgets':
-        return <BudgetsPage />;
-      case 'reports':
-        return <ReportsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <Dashboard />;
-    }
   };
 
   return (
@@ -40,14 +21,20 @@ const Layout: React.FC = () => {
       <Header toggleSidebar={toggleSidebar} />
       <Sidebar
         isOpen={sidebarOpen}
-        setCurrentPage={setCurrentPage}
-        currentPage={currentPage}
-        toggleSidebar={toggleSidebar}  // Add this
+        toggleSidebar={toggleSidebar}
       />
 
       <main className="pt-16 pb-16 lg:pl-64">
         <div className="px-4 sm:px-6 lg:px-8 py-6">
-          {renderCurrentPage()}
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/expenses" element={<ExpensesPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/budgets" element={<BudgetsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/\" replace />} />
+          </Routes>
         </div>
       </main>
     </div>
