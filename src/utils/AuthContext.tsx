@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, googleProvider } from './firebase';
-import { signInWithPopup, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, signOut as firebaseSignOut, User } from 'firebase/auth';
 import { Navigate } from 'react-router-dom';
 
 interface AuthContextType {
@@ -21,12 +21,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(user);
       setLoading(false);
     });
+
+    // Check for redirect result
+    getRedirectResult(auth).catch((error) => {
+      console.error("Redirect result error:", error);
+    });
+
     return unsubscribe;
   }, []);
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithRedirect(auth, googleProvider);
     } catch (error) {
       console.error("Google sign-in error:", error);
     }
