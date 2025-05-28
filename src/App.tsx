@@ -24,7 +24,7 @@ function App() {
                   </RequireAuth>
                 }
               />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/\" replace />} />
             </Routes>
           </AuthProvider>
         </Router>
