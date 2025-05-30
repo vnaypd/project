@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { AuthProvider, RequireAuth } from './utils/AuthContext';
 import Layout from './components/layout/Layout';

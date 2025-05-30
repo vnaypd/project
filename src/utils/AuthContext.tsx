@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, googleProvider } from './firebase';
 import { signInWithRedirect, getRedirectResult, signOut as firebaseSignOut, User } from 'firebase/auth';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -15,11 +15,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
+      if (user) {
+        navigate('/dashboard');
+      }
     });
 
     // Check for redirect result
@@ -28,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return unsubscribe;
-  }, []);
+  }, [navigate]);
 
   const signInWithGoogle = async () => {
     try {
@@ -41,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
+      navigate('/login');
     } catch (error) {
       console.error("Sign out error:", error);
     }
@@ -70,7 +75,7 @@ export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   if (location.pathname === '/login' || location.pathname === '/') {
-    return <Navigate to="/dashboard\" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
