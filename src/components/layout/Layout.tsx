@@ -27,13 +27,13 @@ const Layout: React.FC = () => {
       <main className="pt-16 pb-16 lg:pl-64">
         <div className="px-4 sm:px-6 lg:px-8 py-6">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/expenses" element={<ExpensesPage />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/budgets" element={<BudgetsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route index element={<Dashboard />} />
+            <Route path="expenses" element={<ExpensesPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="budgets" element={<BudgetsPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>
       </main>

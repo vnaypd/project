@@ -13,18 +13,16 @@ function App() {
         <Router>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Navigate to="/login\" replace />} />
               <Route path="/login" element={<HomePage />} />
-              <Route
-                path="/dashboard/*"
-                element={
-                  <RequireAuth>
-                    <ExpenseProvider>
-                      <Layout />
-                    </ExpenseProvider>
-                  </RequireAuth>
-                }
-              />
+              <Route path="/dashboard/*" element={
+                <RequireAuth>
+                  <ExpenseProvider>
+                    <Layout />
+                  </ExpenseProvider>
+                </RequireAuth>
+              } />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </AuthProvider>
         </Router>

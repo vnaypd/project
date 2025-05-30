@@ -27,7 +27,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Check for redirect result
-    getRedirectResult(auth).catch((error) => {
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        navigate('/dashboard');
+      }
+    }).catch((error) => {
       console.error("Redirect result error:", error);
     });
 

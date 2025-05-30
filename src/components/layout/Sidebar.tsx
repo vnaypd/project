@@ -12,12 +12,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   
   const menuItems = [
-    { id: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { id: '/expenses', label: 'Expenses', icon: <Receipt size={20} /> },
-    { id: '/categories', label: 'Categories', icon: <Tag size={20} /> },
-    { id: '/budgets', label: 'Budgets', icon: <CreditCard size={20} /> },
-    { id: '/reports', label: 'Reports', icon: <PieChart size={20} /> },
-    { id: '/settings', label: 'Settings', icon: <Settings size={20} /> },
+    { id: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { id: '/dashboard/expenses', label: 'Expenses', icon: <Receipt size={20} /> },
+    { id: '/dashboard/categories', label: 'Categories', icon: <Tag size={20} /> },
+    { id: '/dashboard/budgets', label: 'Budgets', icon: <CreditCard size={20} /> },
+    { id: '/dashboard/reports', label: 'Reports', icon: <PieChart size={20} /> },
+    { id: '/dashboard/settings', label: 'Settings', icon: <Settings size={20} /> },
   ];
 
   const handleNavigation = (path: string) => {
