@@ -13,9 +13,9 @@ function App() {
         <Router>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<HomePage />} />
               <Route
-                path="/dashboard/*"
+                path="/*"
                 element={
                   <RequireAuth>
                     <ExpenseProvider>
@@ -24,7 +24,6 @@ function App() {
                   </RequireAuth>
                 }
               />
-              <Route path="*" element={<Navigate to="/\" replace />} />
             </Routes>
           </AuthProvider>
         </Router>
