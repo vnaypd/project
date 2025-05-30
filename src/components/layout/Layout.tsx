@@ -33,7 +33,7 @@ const Layout: React.FC = () => {
             <Route path="budgets" element={<BudgetsPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard\" replace />} />
           </Routes>
         </div>
       </main>

@@ -21,8 +21,8 @@ function App() {
                   </ExpenseProvider>
                 </RequireAuth>
               } />
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Navigate to="/login\" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard\" replace />} />
             </Routes>
           </AuthProvider>
         </Router>
