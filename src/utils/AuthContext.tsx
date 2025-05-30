@@ -75,7 +75,7 @@ export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   if (location.pathname === '/login' || location.pathname === '/') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard\" replace />;
   }
 
   return <>{children}</>;
