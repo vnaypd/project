@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { AuthProvider, RequireAuth } from './utils/AuthContext';
 import Layout from './components/layout/Layout';
@@ -13,9 +13,10 @@ function App() {
         <Router>
           <AuthProvider>
             <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<HomePage />} />
               <Route
-                path="/*"
+                path="/dashboard/*"
                 element={
                   <RequireAuth>
                     <ExpenseProvider>

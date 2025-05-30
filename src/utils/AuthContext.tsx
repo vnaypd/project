@@ -21,7 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
-      if (user) {
+      if (user && window.location.pathname === '/login') {
         navigate('/dashboard');
       }
     });
@@ -72,10 +72,6 @@ export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children 
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (location.pathname === '/login' || location.pathname === '/') {
-    return <Navigate to="/dashboard\" replace />;
   }
 
   return <>{children}</>;
